@@ -1,7 +1,8 @@
 import './Captcha.css';
 import './App.css';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CaptchaRecorder } from './CaptchaRecorder';
+import { Recognizer } from './recognizer';
 
 
 function RenderMessagebox(message: string, clearMessage: () => void, 
@@ -28,7 +29,9 @@ type Message = { label: string; status: 'pass' | 'fail' | 'loading'; }
 
 export default function Captcha() {
 	const [checks, setChecks] = useState<Message[]>([]);
-	const [minCheckCount, setMinCheckCount] = useState<number>(0)
+	const [passedCheckCount, setPassedCheckCount] = useState<number>(-1)
+
+	const speechRecognition = useMemo(() => new Recognizer(), [])
 
 	const IsLoudEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 		const Decode = async (audio: Blob): Promise<number> => {
@@ -58,20 +61,39 @@ export default function Captcha() {
 	}
 	const IsShortEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 
-		console.log("Before")
 		await new Promise( (res) => { setTimeout(res, 1000) }) // Load for a while
-		console.log("After")
 
 		if (duration < 4.0)
 			return { label: "Recording was short enough.", status: 'pass' }
 		else
 			return { label: "Our servers can't handle recordings over 4 seconds.", status: 'fail' }
 	}
+	const ContainsWord: (audio: Blob, duration: number, speech: Promise<string>) => Promise<Message> = async (audio: Blob, duration: number, speech: Promise<string>) => {
+		const result = await speech
+		
+		if (result.includes("they're"))
+			return { label: "Identification successful with \"they're\"", status: 'pass' }
+		else
+			return { label: "Please include the word \"they're\" so we can easily identify you.", status: 'fail' }
+	}
+	const ContainsEnoughPitch: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 
+		return { label: "Please include the word \"they're\" so we can easily identify you.", status: 'fail' }
+	}
+
+	const OnStartRecording = async () => {
+		speechRecognition.start()
+	}
 	const OnRecordingComplete = async (audio: Blob) => {
 		const duration = 1.0
 
-		const checks = [IsLoudEnough, IsShortEnough]
+		const speechPromise = speechRecognition.stop()
+		const checks = [
+			IsLoudEnough, 
+			IsShortEnough, 
+			async (audio: Blob, duration: number) => await ContainsWord(audio, duration, speechPromise),
+			ContainsEnoughPitch
+		]
 		var pastChecks: Message[] = []
 		var currentCheck: Message = { label:'', status: 'loading' }
 
@@ -85,11 +107,12 @@ export default function Captcha() {
 			pastChecks = [...pastChecks, currentCheck]
 			setChecks(pastChecks)
 
-			if (currentCheck.status == 'fail' && i+1 > minCheckCount)
+			if (currentCheck.status == 'fail' && i >= passedCheckCount)
 				break
 
-			setMinCheckCount(i)
+			setPassedCheckCount(i+1)
 		}
+
 
 		// TODO: Add logic for all checks complete
 	}
@@ -98,7 +121,7 @@ export default function Captcha() {
 		<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 			<p>Please speak to confirm you are a human</p>
 			<div style={{ width: '100%', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '18px 12px'}}>
-				<CaptchaRecorder onRecordingComplete={OnRecordingComplete}/>
+				<CaptchaRecorder onStartRecording={OnStartRecording} onRecordingComplete={OnRecordingComplete}/>
 				<div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
 					{checks.map((check, idx) => (
 						<div key={idx}>
