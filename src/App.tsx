@@ -4,6 +4,7 @@ import { useState } from 'react';
 import './App.css';
 import './App.css'
 import Captcha from './Captcha'
+import ReactConfetti from 'react-confetti';
 
 function App() {
   const [email, setEmail] = useState('');
@@ -12,7 +13,10 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
   const [btnText, setBtnText] = useState('Sign In');
-  const [showCaptcha, setShowCaptcha] = useState(true)
+  const [showCaptcha, setShowCaptcha] = useState(false)
+  const [captchaSuccess, setCaptchaSuccess] = useState(false);
+
+  
 
   const handlePasswordToggle = () => {
     setShowPassword((v) => !v);
@@ -80,7 +84,9 @@ function App() {
         <div className="captcha-area">
           {showCaptcha && (
             <div className="captcha-reveal-anim">
-              <Captcha />
+              <Captcha onSuccess={() => {
+                setCaptchaSuccess(true)
+              }} />
             </div>
           )}
         </div>
@@ -94,6 +100,9 @@ function App() {
           <button className="social-btn" type="button">🍎</button>
         </div>
       </div>
+      { captchaSuccess && (
+        <ReactConfetti />
+      )}
     </>
   );
 }      
