@@ -38,7 +38,7 @@ export function CaptchaRecorder({ onRecordingComplete }: Props) {
     })
     return () => wavesurfer?.destroy()
 
-  }, [wavesurfer, record, onRecordingComplete])
+  }, [wavesurfer, record])
 
   return (
     <div className="captcha-box">
