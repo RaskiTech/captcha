@@ -12,7 +12,7 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
   const [btnText, setBtnText] = useState('Sign In');
-  const [showCaptcha, setShowCaptcha] = useState(false)
+  const [showCaptcha, setShowCaptcha] = useState(true)
 
   const handlePasswordToggle = () => {
     setShowPassword((v) => !v);
@@ -55,14 +55,10 @@ function App() {
           <div className="form-group">
             <label htmlFor="email">Email address</label>
             <input
-              type="email"
-              id="email"
-              name="email"
               placeholder="Enter your email"
               required
               value={email}
               onChange={e => setEmail(e.target.value)}
-              autoComplete="username"
             />
           </div>
           <div className="form-group" style={{ position: 'relative' }}>
@@ -78,13 +74,10 @@ function App() {
               autoComplete="current-password"
             />
           </div>
-          <div className="forgot-password">
-            <a href="#" onClick={e => { e.preventDefault(); alert('Forgot password functionality would redirect to password reset page'); }}>Forgot your password?</a>
-          </div>
           <button type="submit" className="login-btn" disabled={btnLoading}>{btnText}</button>
         </form>
 
-        <Captcha/>
+        {showCaptcha && <Captcha/>}
 
         <div className="divider">
           <span>or continue with</span>

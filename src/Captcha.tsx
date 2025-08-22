@@ -17,11 +17,6 @@ function RenderMessagebox(message: string, clearMessage: () => void,
 						<svg className="captcha-messagebox-icon" fill="currentColor">{leftSideSvg}</svg>
 						<span className="captcha-messagebox-text">{message}</span>
 					</div>
-					{/* <span className="captcha-messagebox-close">
-						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-						</svg>
-					</span> */}
 				</div>
 			</div>
 		</div>
@@ -37,9 +32,13 @@ const checksInitial = [
 export default function Captcha() {
 	const [checks, setChecks] = useState(checksInitial);
 
+	const OnRecordingComplete = (audio: Blob) => {
+
+	}
+
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 400 }}>
-			<CaptchaRecorder />
+			<CaptchaRecorder onRecordingComplete={OnRecordingComplete}/>
 			<div style={{ marginTop: 24, width: '100%' }}>
 				{checks.map((check, idx) => (
 					<div key={idx}>

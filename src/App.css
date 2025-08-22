@@ -400,7 +400,7 @@ body, #root {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 #root {
-  max-width: 420px;
+  max-width: 500px;
   width: 100%;
 }
 
@@ -409,7 +409,6 @@ body, #root {
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 420px;
   padding: 40px;
   border: 1px solid #e2e8f0;
   position: relative;
