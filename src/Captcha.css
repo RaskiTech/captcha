@@ -59,6 +59,7 @@
 }
 .captcha-messagebox-text {
   font-weight: 500;
+  max-width: calc(100% - 30px);
   color: var(--captcha-messagebox-text, #bfa100);
 }
 .captcha-messagebox-close {

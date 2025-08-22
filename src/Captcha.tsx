@@ -75,10 +75,10 @@ export default function Captcha() {
 
 		await new Promise( (res) => { setTimeout(res, 1000) }) // Load for a while
 
-		if (duration < 4.0)
+		if (duration < 2.0)
 			return { label: "Recording was short enough.", status: 'pass' }
 		else
-			return { label: "Our servers can't handle recordings over 4 seconds.", status: 'fail' }
+			return { label: "Our servers can't handle recordings over 2 seconds.", status: 'fail' }
 	}
 	const ContainsWord: (audio: Blob, duration: number, speech: Promise<string>) => Promise<Message> = async (audio: Blob, duration: number, speech: Promise<string>) => {
 		const result = await speech
@@ -86,7 +86,7 @@ export default function Captcha() {
 		if (result.includes("they're"))
 			return { label: "Identification successful with \"they're\"", status: 'pass' }
 		else
-			return { label: "Please include the word \"they're\" so we can easily identify you.", status: 'fail' }
+			return { label: "Please include the word \"they're\" so we can easily identify you. You said: " + result, status: 'fail' }
 	}
 	const ContainsEnoughPitch: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 
@@ -139,7 +139,6 @@ export default function Captcha() {
 																			 <div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
 							{checks.map((check, idx) => {
 								// Animate only if this check hasn't animated in yet
-								const popIn = !animatedChecks.current.has(check.label) && idx === checks.length - 1;
 								return (
 									<div key={idx} className={`captcha-messagebox-outer captcha-pop-in`}>
 									{check.status == 'pass' ? 
