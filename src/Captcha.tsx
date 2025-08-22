@@ -89,8 +89,73 @@ export default function Captcha() {
 			return { label: "Please include the word \"they're\" so we can easily identify you. You said: " + result, status: 'fail' }
 	}
 	const ContainsEnoughPitch: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
+		// Helper: naive autocorrelation pitch detection for a window of PCM data
+		function detectPitch(samples: Float32Array, sampleRate: number): number | null {
+			let bestOffset = -1;
+			let bestCorrelation = 0;
+			let rms = 0;
+			const size = samples.length;
+			for (let i = 0; i < size; i++) rms += samples[i] * samples[i];
+			rms = Math.sqrt(rms / size);
+			if (rms < 0.01) return null; // too quiet
 
-		return { label: "Please include the word \"they're\" so we can easily identify you.", status: 'fail' }
+			let found = false;
+			for (let offset = 16; offset < 1024; offset++) {
+				let correlation = 0;
+				for (let i = 0; i < size - offset; i++) {
+					correlation += samples[i] * samples[i + offset];
+				}
+				correlation = correlation / (size - offset);
+
+				// console.log(correlation)
+				if (correlation > bestCorrelation && correlation > 0.001) {
+					bestCorrelation = correlation;
+					bestOffset = offset;
+					found = true;
+				}
+			}
+			if (found && bestOffset > -1) {
+				return sampleRate / bestOffset;
+			}
+			return null;
+		}
+
+		const DecodePitch = async (audio: Blob): Promise<{ min: number, max: number }> => {
+			const arrayBuffer = await audio.arrayBuffer();
+			const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+			const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+			let minPitch = Infinity;
+			let maxPitch = 0;
+
+			for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
+				const data = audioBuffer.getChannelData(ch);
+
+				const windowSize = 2048;
+				const hop = 1024;
+				for (let i = 0; i < data.length - windowSize; i += hop) {
+					const window = data.slice(i, i + windowSize);
+					const pitch = detectPitch(window, audioBuffer.sampleRate);
+					console.log(pitch)
+					if (pitch && pitch > 50 && pitch < 2000) { // filter out noise
+						minPitch = Math.min(minPitch, pitch);
+						maxPitch = Math.max(maxPitch, pitch);
+					}
+				}
+			}
+			return {
+				min: minPitch === Infinity ? 0 : minPitch,
+				max: maxPitch === 0 ? 0 : maxPitch,
+			};
+		};
+
+		const { min, max } = await DecodePitch(audio)
+		console.log(min + " " + max + " D: " + Math.abs(max - min))
+
+		if (Math.abs(max - min) > 75)
+			return { label: "Vocal range check successful", status: 'pass' }
+		else
+			return { label: "Please include different pitch levels so we can hear your full vocal range.", status: 'fail' }
 	}
 
 	const OnStartRecording = async () => {
@@ -99,8 +164,8 @@ export default function Captcha() {
 	const OnRecordingComplete = async (audio: Blob, duration: number) => {
 		const speechPromise = speechRecognition.stop()
 		const checks = [
-			IsLoudEnough, 
 			IsShortEnough, 
+			IsLoudEnough, 
 			async (audio: Blob, duration: number) => await ContainsWord(audio, duration, speechPromise),
 			ContainsEnoughPitch
 		]

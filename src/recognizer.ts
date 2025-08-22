@@ -26,17 +26,21 @@ export class Recognizer {
 
     this.resultPromise = new Promise<string>(
     (resolve) => {
-      console.log("Created callback")
+      var resolved = false
       this.recognition.onresult = (event) => {
-        console.log("Should resolve")
         resolve(event.results[0][0].transcript)
+        resolved = true
       }
       // this.recognition.onerror = (ev) => {
       //   console.log("Errori")
       //   reject()
       // }
       this.recognition.onend = (event) => {
-        resolve("")
+        if (!resolved)
+        {
+          resolve("")
+          resolved = true
+        }
       }
       // this.recognition.onnomatch = (ev) => {
       //   console.log("calling nomathc")
