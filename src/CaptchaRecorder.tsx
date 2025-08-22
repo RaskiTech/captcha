@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import RecordPlugin from 'wavesurfer.js/dist/plugins/record.js';
 import './CaptchaRecorder.css';
 import { useWavesurfer } from '@wavesurfer/react';
@@ -11,16 +10,18 @@ type Props = {
 
 const RECORD_DURATION = 5.0; // seconds
 
-export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props) {
-  const containerRef = useRef(null)
-
-  const [retryCount, setRetryCount] = useState(0)
-
-  const record = useMemo(() => RecordPlugin.create({
-    renderRecordedAudio: true,
+function newRecorder(): RecordPlugin {
+  return RecordPlugin.create({
+    renderRecordedAudio: false,
     continuousWaveform: true,
     continuousWaveformDuration: RECORD_DURATION,
-  }), [retryCount]);
+  });
+}
+
+export function CaptchaRecorder({ onRecordingComplete, onStartRecording }: Props) {
+  const containerRef = useRef(null)
+
+  const recordRef = useRef(newRecorder());
 
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
@@ -36,17 +37,7 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
     barRadius: 1,
   })
 
-  useEffect(() => {
-    if (wavesurfer) {
-      wavesurfer.registerPlugin(record)
-    }
-
-    record?.on('record-end', (blob) => {
-      onRecordingComplete(blob, record.getDuration() / 1000)
-    })
-  }, [wavesurfer, record, retryCount])
-
-  const isRecording = record.isRecording()
+  const isRecording = recordRef.current.isRecording()
 
   return (
     <div className="captcha-box">
@@ -55,7 +46,13 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
           <div className="captcha-circle">
             <svg
               onClick={async () => {
-                await record.startRecording({})
+                wavesurfer?.unregisterPlugin(recordRef.current)
+                wavesurfer?.seekTo(0)
+                wavesurfer?.empty()
+                recordRef.current.destroy()
+                recordRef.current = newRecorder()
+                wavesurfer?.registerPlugin(recordRef.current)
+                await recordRef.current.startRecording({})
                 onStartRecording()
               }}
               style={{
@@ -69,12 +66,10 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
           <div className="captcha-circle">
             <svg
               onClick={() => {
-                record.stopRecording()
-                record.destroy()
-                wavesurfer?.unregisterPlugin(record)
-                setRetryCount(retryCount + 1)
-                wavesurfer?.seekTo(0)
-                wavesurfer?.empty()
+                recordRef.current.pauseRecording()
+                recordRef.current.on("record-pause", blob => {
+                  onRecordingComplete(blob, recordRef.current.getDuration() / 1000)
+                })
               }}
               style={{
                 fill: 'red',
@@ -87,9 +82,10 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
         <div className='captcha-wave' ref={containerRef}></div>
 
         <div className='captcha-duration'>
-          {(record.getDuration() / 1000).toFixed(2)}s
+          {(recordRef.current.getDuration() / 1000).toFixed(2)}s
         </div>
       </div>
     </div >
   );
 }
+
