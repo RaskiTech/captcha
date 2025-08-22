@@ -5,7 +5,7 @@ import './CaptchaRecorder.css';
 import { useWavesurfer } from '@wavesurfer/react';
 
 type Props = {
-  onRecordingComplete: (audioBlob: Blob) => void;
+  onRecordingComplete: (audioBlob: Blob, duration: number) => void;
   onStartRecording: () => void;
 }
 
@@ -39,7 +39,7 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
     }
 
     record?.on('record-end', (blob) => {
-      onRecordingComplete(blob)
+      onRecordingComplete(blob, record.getDuration())
     })
     return () => wavesurfer?.destroy()
 
