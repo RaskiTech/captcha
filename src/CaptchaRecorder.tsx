@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import RecordPlugin from 'wavesurfer.js/dist/plugins/record.js';
 import './CaptchaRecorder.css';
 import { useWavesurfer } from '@wavesurfer/react';
+import { Recognizer } from './recognizer';
 
 type Props = {
   onRecordingComplete: (audioBlob: Blob) => void;
@@ -12,6 +13,8 @@ const RECORD_DURATION = 3.0; // seconds
 
 export function CaptchaRecorder({ onRecordingComplete }: Props) {
   const containerRef = useRef(null)
+
+  const recog = useMemo(() => new Recognizer(), [])
 
   const record = useMemo(() => RecordPlugin.create({
     renderRecordedAudio: true,
@@ -46,16 +49,19 @@ export function CaptchaRecorder({ onRecordingComplete }: Props) {
         <div className="captcha-circle" onClick={async () => {
           if (!record.isRecording()) {
             await record.startRecording({})
+            recog.start()
             setTimeout(() => {
               if (record.isRecording()) {
                 record.stopRecording()
                 wavesurfer?.empty()
+                recog.stop()
 
               }
             }, RECORD_DURATION * 1000)
           } else {
             record.stopRecording()
             wavesurfer?.empty()
+            recog.stop()
           }
         }}>
 

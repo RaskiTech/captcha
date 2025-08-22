@@ -24,7 +24,6 @@ function RenderMessagebox(message: string, clearMessage: () => void,
 	);
 }
 
-
 const checksInitial = [
 	{ label: 'Was long enough', passed: true },
 	{ label: "Wasn't loud enough", passed: false },
