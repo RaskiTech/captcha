@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import './App.css';
 import './App.css'
-import { Captcha } from './Captcha'
+import { CaptchaRecorder } from './CaptchaRecorder'
 
 function App() {
   const [email, setEmail] = useState('');
@@ -83,9 +83,9 @@ function App() {
           </div>
           <button type="submit" className="login-btn" disabled={btnLoading}>{btnText}</button>
         </form>
-        <Captcha>
+        <CaptchaRecorder>
 
-        </Captcha>
+        </CaptchaRecorder>
         <div className="divider">
           <span>or continue with</span>
         </div>
