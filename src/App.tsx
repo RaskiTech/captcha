@@ -70,6 +70,9 @@ function App() {
           </div>
           <button type="submit" className="login-btn" disabled={btnLoading}>{btnText}</button>
         </form>
+        <Captcha>
+
+        </Captcha>
         <div className="divider">
           <span>or continue with</span>
         </div>
@@ -83,7 +86,6 @@ function App() {
           <a href="#" onClick={e => { e.preventDefault(); alert('Sign up page would open here'); }}>Sign up</a>
         </div>
       </div>
-      <Captcha></Captcha>
     </>
   );
 }      
