@@ -16,17 +16,21 @@ export class Recognizer {
     recognition.interimResults = false
     recognition.maxAlternatives = 1
     this.recognition = recognition
-
-    this.recognition.onresult = (event) => {
-      console.log(event.results)
-    }
   }
 
   start() {
     this.recognition.start()
   }
 
-  stop() {
+  stop(): Promise<string> {
+    
+    const promise = new Promise<string>((resolve) => {
+      this.recognition.onresult = (event) => {
+        resolve(event.results[0][0].transcript)
+      }
+    })
     this.recognition.stop()
+
+    return promise
   }
 }

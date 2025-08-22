@@ -9,7 +9,7 @@ type Props = {
   onStartRecording: () => void;
 }
 
-const RECORD_DURATION = 3.0; // seconds
+const RECORD_DURATION = 5.0; // seconds
 
 export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props) {
   const containerRef = useRef(null)
