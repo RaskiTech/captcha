@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useEffect, useRef } from 'react';
 import RecordPlugin from 'wavesurfer.js/dist/plugins/record.js';
 import './CaptchaRecorder.css';
@@ -14,11 +14,13 @@ const RECORD_DURATION = 5.0; // seconds
 export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props) {
   const containerRef = useRef(null)
 
+  const [retryCount, setRetryCount] = useState(0)
+
   const record = useMemo(() => RecordPlugin.create({
     renderRecordedAudio: true,
     continuousWaveform: true,
     continuousWaveformDuration: RECORD_DURATION,
-  }), []);
+  }), [retryCount]);
 
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
@@ -27,6 +29,7 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
     progressColor: 'rgba(158, 154, 154, 1)',
     barWidth: 3,
     width: "90%",
+    cursorColor: 'transparent',
     hideScrollbar: true,
 
     normalize: true,
@@ -41,9 +44,7 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
     record?.on('record-end', (blob) => {
       onRecordingComplete(blob, record.getDuration())
     })
-    return () => wavesurfer?.destroy()
-
-  }, [wavesurfer, record])
+  }, [wavesurfer, record, retryCount])
 
   const isRecording = record.isRecording()
 
@@ -69,6 +70,10 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
             <svg
               onClick={() => {
                 record.stopRecording()
+                record.destroy()
+                wavesurfer?.unregisterPlugin(record)
+                setRetryCount(retryCount + 1)
+                wavesurfer?.seekTo(0)
                 wavesurfer?.empty()
               }}
               style={{
@@ -80,6 +85,10 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
         </>}
 
         <div className='captcha-wave' ref={containerRef}></div>
+
+        <div className='captcha-duration'>
+          {(record.getDuration() / 1000).toFixed(2)}s
+        </div>
       </div>
     </div >
   );
