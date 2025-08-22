@@ -69,7 +69,7 @@ export default function Captcha() {
 		if(loudEnough) {
 			return { label: "The recording was loud enough", status: 'pass' }
 		}
-		return { label: "The recording was too quiet", status: 'fail' }
+		return { label: "We couldn't quite hear you. Please speak louder", status: 'fail' }
 	}
 	const IsShortEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 
@@ -78,7 +78,7 @@ export default function Captcha() {
 		if (duration < 2.0)
 			return { label: "Recording was short enough.", status: 'pass' }
 		else
-			return { label: "Our servers can't handle recordings over 2 seconds.", status: 'fail' }
+			return { label: "Sorry, our servers can't handle recordings over 2 seconds.", status: 'fail' }
 	}
 	const ContainsWord: (audio: Blob, duration: number, speech: Promise<string>) => Promise<Message> = async (audio: Blob, duration: number, speech: Promise<string>) => {
 		const result = await speech
@@ -157,17 +157,72 @@ export default function Captcha() {
 		else
 			return { label: "Please include different pitch levels so we can hear your full vocal range.", status: 'fail' }
 	}
+	const ContainsClap: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
+		const DetectClap = async (audio: Blob): Promise<boolean> => {
+			// 1. Decode audio data
+			const arrayBuffer = await audio.arrayBuffer();
+			const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+			const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+			let detected = false;
+			const sampleRate = audioBuffer.sampleRate;
+
+			// Window size for detecting sudden changes (about 20ms)
+			const windowSize = Math.floor(sampleRate * 0.02);
+
+			for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
+				const data = audioBuffer.getChannelData(ch);
+
+				// Step through in windows
+				var prevRms = 0
+				for (let i = 0; i < data.length - windowSize; i += windowSize) {
+					// RMS (energy) of current window
+					let sum = 0;
+					for (let j = 0; j < windowSize; j++) {
+						sum += data[i + j] * data[i + j];
+					}
+					const rms = Math.sqrt(sum / windowSize);
+
+					// Compare with previous window (sudden spike = clap candidate)
+					if (i > 0) {
+						console.log(rms + " " + prevRms)
+						if (rms > 0.1 && rms > prevRms * 7) { 
+							// Thresholds: >0.25 amplitude and 3x increase over prev window
+							detected = true;
+							break;
+						}
+					}
+					prevRms = rms;
+				}
+
+				if (detected) break;
+			}
+
+			return detected;
+		};
+
+		const result = await DetectClap(audio)
+
+		if (result)
+			return { label: "Clap found.", status: "pass" }
+		else
+			return { label: "As the last step, please clap in the recording for calibration purposes.", status: "fail" }
+	}
 
 	const OnStartRecording = async () => {
 		speechRecognition.start()
 	}
 	const OnRecordingComplete = async (audio: Blob, duration: number) => {
+
+		ContainsClap(audio, duration)
+
 		const speechPromise = speechRecognition.stop()
 		const checks = [
 			IsShortEnough, 
 			IsLoudEnough, 
 			async (audio: Blob, duration: number) => await ContainsWord(audio, duration, speechPromise),
-			ContainsEnoughPitch
+			ContainsEnoughPitch,
+			ContainsClap
 		]
 		var pastChecks: Message[] = []
 		var currentCheck: Message = { label:'', status: 'loading' }
