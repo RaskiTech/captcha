@@ -1,0 +1,70 @@
+/* Captcha messagebox styles */
+.captcha-messagebox-outer {
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  max-height: 0;
+  opacity: 0;
+  transform: translateX(100%);
+  padding-left: 16px;
+  padding-right: 12px;
+}
+.captcha-messagebox-outer.active {
+  max-height: 384px;
+  opacity: 1;
+  transform: translateX(0);
+  padding: 7px;
+}
+.captcha-messagebox {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--captcha-messagebox-border, #e2e8f0);
+  background: var(--captcha-messagebox-bg, #f7fafc);
+  cursor: pointer;
+}
+.captcha-messagebox-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.captcha-messagebox-left {
+  display: flex;
+  align-items: center;
+}
+.captcha-messagebox-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  color: var(--captcha-messagebox-icon, #bfa100);
+}
+.captcha-messagebox-text {
+  font-weight: 500;
+  color: var(--captcha-messagebox-text, #bfa100);
+}
+.captcha-messagebox-close {
+  margin-left: 16px;
+  color: var(--captcha-messagebox-icon, #bfa100);
+  transition: color 0.2s;
+  cursor: pointer;
+}
+.captcha-messagebox-close:hover {
+  color: var(--captcha-messagebox-text, #bfa100);
+}
+/* Color themes */
+.captcha-messagebox-success {
+  --captcha-messagebox-bg: #eafaf1;
+  --captcha-messagebox-border: #b7e4c7;
+  --captcha-messagebox-icon: #27ae60;
+  --captcha-messagebox-text: #14532d;
+}
+.captcha-messagebox-error {
+  --captcha-messagebox-bg: #fff0f0;
+  --captcha-messagebox-border: #f5c2c7;
+  --captcha-messagebox-icon: #e74c3c;
+  --captcha-messagebox-text: #7f1d1d;
+}
+.captcha-messagebox-warning {
+  --captcha-messagebox-bg: #fffbe6;
+  --captcha-messagebox-border: #f9d037;
+  --captcha-messagebox-icon: #bfa100;
+  --captcha-messagebox-text: #7a5c00;
+}
