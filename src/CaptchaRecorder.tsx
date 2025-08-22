@@ -70,9 +70,6 @@ export function CaptchaRecorder({ onRecordingComplete }: Props) {
         </div>
         <div className='captcha-wave' ref={containerRef}></div>
       </div>
-      <div className="captcha-bottom-text">
-        <b>Please speak into the microphone</b>
-      </div>
     </div>
   );
 }
