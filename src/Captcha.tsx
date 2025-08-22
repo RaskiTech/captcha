@@ -9,7 +9,7 @@ function RenderMessagebox(message: string, clearMessage: () => void,
 	color: 'success' | 'error' | 'warning', leftSideSvg: React.ReactNode ) 
 {
 	return (
-		<div className={`captcha-messagebox-outer${message ? ' active' : ''}`}> 
+		<> 
 			<div 
 				className={`captcha-messagebox captcha-messagebox-${color}`}
 				onClick={clearMessage}
@@ -21,7 +21,7 @@ function RenderMessagebox(message: string, clearMessage: () => void,
 					</div>
 				</div>
 			</div>
-		</div>
+		</>
 	);
 }
 
@@ -129,27 +129,29 @@ export default function Captcha() {
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 			<p>Please speak to confirm you are a human</p>
-			<div style={{ width: '100%', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '18px 12px'}}>
-				<CaptchaRecorder onStartRecording={OnStartRecording} onRecordingComplete={OnRecordingComplete}/>
-								<div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
-									   {checks.map((check, idx) => {
-										   // Animate only if this check hasn't animated in yet
-										   const popIn = !animatedChecks.current.has(check.label) && idx === checks.length - 1;
-										   return (
-											   <div key={idx} className={`captcha-messagebox-outer captcha-pop-in`}>
-												{check.status == 'pass' ? 
-													RenderMessagebox(check.label, () => {}, 'success', 
-														<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />)
-												: check.status == 'fail' ?
-													RenderMessagebox(check.label, () => {}, 'error', 
-														<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
-												: RenderMessagebox(check.label, () => {}, 'warning', 
-														<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
-												}
-											</div>
-										);
-									})}
+							 <div
+								 className={`captcha-outer-grow${checks.length > 1 ? ' expanded' : ''}`}
+								 style={{ width: '100%', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '18px 12px'}}>
+											 <CaptchaRecorder onStartRecording={OnStartRecording} onRecordingComplete={OnRecordingComplete}/>
+																			 <div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
+							{checks.map((check, idx) => {
+								// Animate only if this check hasn't animated in yet
+								const popIn = !animatedChecks.current.has(check.label) && idx === checks.length - 1;
+								return (
+									<div key={idx} className={`captcha-messagebox-outer captcha-pop-in`}>
+									{check.status == 'pass' ? 
+										RenderMessagebox(check.label, () => {}, 'success', 
+											<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />)
+									: check.status == 'fail' ?
+										RenderMessagebox(check.label, () => {}, 'error', 
+											<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
+									: RenderMessagebox(check.label, () => {}, 'warning', 
+											<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
+									}
 								</div>
+							);
+						})}
+					</div>
 				</div>
 			</div>
 		);

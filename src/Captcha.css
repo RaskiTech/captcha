@@ -1,3 +1,12 @@
+/* Grow transition for outer container */
+.captcha-outer-grow {
+  transition: max-height 0.5s cubic-bezier(.4,0,.2,1), padding 0.5s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  max-height: 200px; /* default for 0-1 checks, adjust as needed */
+}
+.captcha-outer-grow.expanded {
+  max-height: 800px; /* enough for all checks, adjust as needed */
+}
 /* Pop-in animation for checks */
 .captcha-pop-in {
   animation: captchaPopIn 0.4s cubic-bezier(.4,0,.2,1);
@@ -21,9 +30,7 @@
 .captcha-messagebox-outer {
   overflow: hidden;
   transition: all 0.3s cubic-bezier(.4,0,.2,1);
-  /* max-height: 0;
-  opacity: 0;
-  transform: translateX(100%); */
+  margin: 3px;
   padding-left: 16px;
   padding-right: 12px;
 }
