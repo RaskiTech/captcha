@@ -84,8 +84,7 @@ export default function Captcha() {
 	const OnStartRecording = async () => {
 		speechRecognition.start()
 	}
-	const OnRecordingComplete = async (audio: Blob) => {
-		const duration = 1.0
+	const OnRecordingComplete = async (audio: Blob, duration: number) => {
 
 		const speechPromise = speechRecognition.stop()
 		const checks = [
