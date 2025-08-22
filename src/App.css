@@ -1,3 +1,23 @@
+/* Captcha reveal animation */
+.captcha-reveal-anim {
+  animation: captchaGrowIn 0.7s cubic-bezier(.4,0,.2,1);
+  transform-origin: top center;
+}
+
+@keyframes captchaGrowIn {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.0);
+  }
+  80% {
+    opacity: 1;
+    transform: scaleY(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
 * {
   margin: 0;
   padding: 0;
@@ -19,7 +39,7 @@ body {
 
 body::before {
   content: '';
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -35,7 +55,7 @@ body::before {
 
 body::after {
   content: '';
-  position: absolute;
+  position: fixed;
   top: 20%;
   right: 15%;
   width: 200px;
@@ -46,7 +66,7 @@ body::after {
 }
 
 .background-crack {
-  position: absolute;
+  position: fixed;
   background: rgba(0, 0, 0, 0.06);
   pointer-events: none;
 }
@@ -80,23 +100,26 @@ body::after {
   50% { background-position: 100% 50%; }
 }
 
+.captcha-area {
+  padding-top: 20px;
+}
 
 .crack {
   position: absolute;
-  background: rgba(139, 69, 19, 0.1);
+  background: rgba(19, 14, 10, 0.1);
   border-radius: 1px;
 }
 
 .crack-1 {
-  top: 60%;
-  left: 5%;
+  top: 500px;
+  left: 2px;
   width: 60px;
   height: 1px;
   transform: rotate(15deg);
 }
 
 .crack-2 {
-  top: 25%;
+  top: 300px;
   right: 15%;
   width: 40px;
   height: 1px;
@@ -104,7 +127,7 @@ body::after {
 }
 
 .crack-3 {
-  bottom: 30%;
+  bottom: 50px;
   left: 12%;
   width: 25px;
   height: 1px;
@@ -177,7 +200,7 @@ body::after {
   position: relative;
 }
 
-label {
+label, p {
   display: block;
   color: #4a5568;
   font-weight: 500;

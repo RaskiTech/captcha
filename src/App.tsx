@@ -77,7 +77,13 @@ function App() {
           <button type="submit" className="login-btn" disabled={btnLoading}>{btnText}</button>
         </form>
 
-        {showCaptcha && <Captcha/>}
+        <div className="captcha-area">
+          {showCaptcha && (
+            <div className="captcha-reveal-anim">
+              <Captcha />
+            </div>
+          )}
+        </div>
 
         <div className="divider">
           <span>or continue with</span>
@@ -86,10 +92,6 @@ function App() {
           <button className="social-btn" type="button">🔵</button>
           <button className="social-btn" type="button">📘</button>
           <button className="social-btn" type="button">🍎</button>
-        </div>
-        <div className="signup-link">
-          Don't have an account?{' '}
-          <a href="#" onClick={e => { e.preventDefault(); }}>Sign up</a>
         </div>
       </div>
     </>
