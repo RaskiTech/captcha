@@ -1,35 +1,56 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useEffect, useRef } from 'react';
-import WaveSurfer from 'wavesurfer.js';
 import RecordPlugin from 'wavesurfer.js/dist/plugins/record.js';
 import './CaptchaRecorder.css';
 import { useWavesurfer } from '@wavesurfer/react';
 
 type Props = {
-  onRecordingComplete?: (audioBlob: Blob) => void;
+  onRecordingComplete: (audioBlob: Blob) => void;
 }
 
-export function CaptchaRecorder() {
+const RECORD_DURATION = 3.0; // seconds
+
+export function CaptchaRecorder({ onRecordingComplete }: Props) {
   const containerRef = useRef(null)
 
+  const record = useMemo(() => RecordPlugin.create({
+    renderRecordedAudio: true,
+    continuousWaveform: true,
+    continuousWaveformDuration: RECORD_DURATION,
+    scrollingWaveform: false,
+  }), []);
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
     height: 100,
     waveColor: 'rgba(105, 105, 105, 1)',
     progressColor: 'rgba(45, 45, 45, 1)',
     barWidth: 2,
-
-    plugins: useMemo(() => [RecordPlugin.create({
-      renderRecordedAudio: true,
-      continuousWaveform: true,
-    })], []),
   })
+
+  useEffect(() => {
+    if (wavesurfer) {
+      wavesurfer.registerPlugin(record)
+    }
+
+    record?.on('record-end', (blob) => {
+      onRecordingComplete(blob)
+    })
+    return () => wavesurfer?.destroy()
+    
+  }, [wavesurfer, record, onRecordingComplete])
 
   return (
     <div className="captcha-box">
       <div className="captcha-content">
         <div className="captcha-circle" onClick={() => {
-          wavesurfer?.playPause()
+          record.startRecording({}).then(() => {
+            setTimeout(() => {
+              if(record.isRecording()) {
+                record.stopRecording()
+
+              }
+            }, RECORD_DURATION * 1000)
+          })
         }}>
           
             <svg width="32" height="32" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
