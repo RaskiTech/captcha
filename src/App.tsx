@@ -12,6 +12,7 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
   const [btnText, setBtnText] = useState('Sign In');
+  const [showCaptcha, setShowCaptcha] = useState(false)
 
   const handlePasswordToggle = () => {
     setShowPassword((v) => !v);
@@ -20,21 +21,33 @@ function App() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email && password) {
+      setShowCaptcha(true);
       setBtnLoading(true);
     }
   }
+
+  const [tilted, setTilted] = useState(false);
+  // Add the tilt after the slideUp animation ends
+  const handleAnimationEnd = (e: React.AnimationEvent<HTMLDivElement>) => {
+    if (e.animationName === 'slideUp') {
+      setTilted(true);
+    }
+  };
 
   return (
     <>
       <div className="background-crack bg-crack-1"></div>
       <div className="background-crack bg-crack-2"></div>
       <div className="background-crack bg-crack-3"></div>
-      <div className="login-container">
+      <div
+        className={`login-container${tilted ? ' tilted' : ''}`}
+        onAnimationEnd={handleAnimationEnd}
+      >
         <div className="crack crack-1"></div>
         <div className="crack crack-2"></div>
         <div className="crack crack-3"></div>
         <div className="logo">
-          <div className="logo-icon"></div>
+          <div className={`logo-icon ${tilted ? ' tilted' : ''}`}></div>
           <h1>Welcome back</h1>
           <p>Sign in to your account</p>
         </div>
@@ -77,13 +90,13 @@ function App() {
           <span>or continue with</span>
         </div>
         <div className="social-login">
-          <button className="social-btn" type="button" onClick={() => alert('Google login integration would go here')}>🔵</button>
-          <button className="social-btn" type="button" onClick={() => alert('Facebook login integration would go here')}>📘</button>
-          <button className="social-btn" type="button" onClick={() => alert('Apple login integration would go here')}>🍎</button>
+          <button className="social-btn" type="button">🔵</button>
+          <button className="social-btn" type="button">📘</button>
+          <button className="social-btn" type="button">🍎</button>
         </div>
         <div className="signup-link">
           Don't have an account?{' '}
-          <a href="#" onClick={e => { e.preventDefault(); alert('Sign up page would open here'); }}>Sign up</a>
+          <a href="#" onClick={e => { e.preventDefault(); }}>Sign up</a>
         </div>
       </div>
     </>

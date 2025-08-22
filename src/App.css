@@ -15,7 +15,6 @@ body {
   justify-content: center;
   padding: 20px;
   position: relative;
-  overflow: hidden;
 }
 
 body::before {
@@ -81,33 +80,6 @@ body::after {
   50% { background-position: 100% 50%; }
 }
 
-.login-container {
-  background: #fefcf1;
-  border-radius: 18px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 420px;
-  padding: 40px;
-  border: 2px solid #f9d037;
-  position: relative;
-  transform: rotate(-0.5deg);
-  background-image: 
-  linear-gradient(135deg, transparent 25%, rgba(249, 208, 55, 0.08) 25%),
-  linear-gradient(-45deg, rgba(249, 208, 55, 0.04) 1px, transparent 1px),
-  radial-gradient(circle at 30% 20%, rgba(249, 208, 55, 0.08) 2px, transparent 2px),
-  radial-gradient(circle at 70% 80%, rgba(249, 208, 55, 0.04) 1px, transparent 1px);
-}
-
-.login-container::after {
-  content: '';
-  position: absolute;
-  top: 15%;
-  right: 8%;
-  width: 80px;
-  height: 1px;
-  background: rgba(139, 69, 19, 0.15);
-  transform: rotate(-25deg);
-}
 
 .crack {
   position: absolute;
@@ -149,6 +121,16 @@ body::after {
   background: #c39c60;
   opacity: 1;
 }
+.login-container::after {
+  content: '';
+  position: absolute;
+  top: 15%;
+  right: 8%;
+  width: 80px;
+  height: 1px;
+  background: rgba(139, 69, 19, 0.15);
+  transform: rotate(-25deg);
+}
 
 .logo {
   text-align: center;
@@ -158,15 +140,18 @@ body::after {
 .logo-icon {
   width: 56px;
   height: 56px;
-  background: #f39c12;
-  border-radius: 50%;
+  background: #f5e3c6;
+  border-radius: 20%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
   border: 3px solid #f39c12;
   box-shadow: 0 2px 8px #f9d37a44;
+}
+.logo-icon.tilted {
   transform: rotate(5deg);
+  transition: transform 0.3s ease-in-out;
 }
 
 .logo-icon::after {
@@ -365,10 +350,6 @@ input:hover {
   }
 }
 
-.login-container {
-  animation: slideUp 0.6s ease-out;
-}
-
 @media (max-width: 480px) {
   .login-container {
     padding: 24px;
@@ -424,7 +405,7 @@ body, #root {
 }
 
 .login-container {
-  background: #ffffff;
+  background: #fefcf1;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
   width: 100%;
@@ -433,25 +414,17 @@ body, #root {
   border: 1px solid #e2e8f0;
   position: relative;
   animation: slideUp 0.6s ease-out;
+  transform: none;
+  transition: transform 0.5s cubic-bezier(.68,-0.55,.27,1.55);
+}
+
+.login-container.tilted {
+  transform: rotate(-0.7deg);
 }
 
 .logo {
   text-align: center;
   margin-bottom: 32px;
-}
-.logo-icon {
-  width: 56px;
-  height: 56px;
-  background: #667eea;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-.logo-icon::after {
-  content: '🔐';
-  font-size: 24px;
 }
 .logo h1 {
   color: #2d3748;
