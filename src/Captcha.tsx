@@ -62,11 +62,14 @@ export default function Captcha() {
 			return max
 		};
 
-		const threshold = 0.2; // 0 (silent) to 1 (max)
+		const threshold = 0.4; // 0 (silent) to 1 (max)
 		const loudEnough = (await Decode(audio)) > threshold;
 		await new Promise( (res) => { setTimeout(res, 1000) })
 
-		return { label: "Yes", status: 'pass' }
+		if(loudEnough) {
+			return { label: "The recording was loud enough", status: 'pass' }
+		}
+		return { label: "The recording was too quiet", status: 'fail' }
 	}
 	const IsShortEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 

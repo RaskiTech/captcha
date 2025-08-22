@@ -42,7 +42,7 @@ export function CaptchaRecorder({ onRecordingComplete ,onStartRecording}: Props)
     }
 
     record?.on('record-end', (blob) => {
-      onRecordingComplete(blob, record.getDuration())
+      onRecordingComplete(blob, record.getDuration() / 1000)
     })
   }, [wavesurfer, record, retryCount])
 
