@@ -5,12 +5,11 @@ import { CaptchaRecorder } from './CaptchaRecorder';
 import { Recognizer } from './recognizer';
 
 
-function RenderMessagebox(message: string, clearMessage: () => void, 
-	color: 'success' | 'error' | 'warning', leftSideSvg: React.ReactNode ) 
-{
+function RenderMessagebox(message: string, clearMessage: () => void,
+	color: 'success' | 'error' | 'warning', leftSideSvg: React.ReactNode) {
 	return (
-		<> 
-			<div 
+		<>
+			<div
 				className={`captcha-messagebox captcha-messagebox-${color}`}
 				onClick={clearMessage}
 			>
@@ -27,7 +26,11 @@ function RenderMessagebox(message: string, clearMessage: () => void,
 
 type Message = { label: string; status: 'pass' | 'fail' | 'loading'; }
 
-export default function Captcha() {
+type Props = {
+	onSuccess: () => void
+}
+
+export default function Captcha({ onSuccess }: Props) {
 	const [checks, setChecks] = useState<Message[]>([]);
 	const [passedCheckCount, setPassedCheckCount] = useState<number>(-1)
 
@@ -50,30 +53,35 @@ export default function Captcha() {
 			const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
 			const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-			// 2. Get PCM data from all channels and find max amplitude
-			let max = 0;
+			let maxLoudness = 0;
 			for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
 				const data = audioBuffer.getChannelData(ch);
+				let sumSquares = 0;
 				for (let i = 0; i < data.length; i++) {
-				max = Math.max(max, Math.abs(data[i]));
+					sumSquares += data[i] * data[i];
 				}
+				const rms = Math.sqrt(sumSquares / data.length);
+				maxLoudness = Math.max(maxLoudness, rms);
 			}
+			return maxLoudness
+		}
+		
 
-			return max
-		};
+		const threshold = -20; // dB threshold for loudness 
+		const rmsLoudness = await Decode(audio);
+		const rmsDb = 20 * Math.log10(rmsLoudness); // Convert to dB
+		console.log({rmsDb})
+		const loudEnough = rmsDb > threshold;
+		await new Promise((res) => { setTimeout(res, 1000) })
 
-		const threshold = 0.4; // 0 (silent) to 1 (max)
-		const loudEnough = (await Decode(audio)) > threshold;
-		await new Promise( (res) => { setTimeout(res, 1000) })
-
-		if(loudEnough) {
+		if (loudEnough) {
 			return { label: "The recording was loud enough", status: 'pass' }
 		}
 		return { label: "We couldn't quite hear you. Please speak louder", status: 'fail' }
 	}
 	const IsShortEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 
-		await new Promise( (res) => { setTimeout(res, 1000) }) // Load for a while
+		await new Promise((res) => { setTimeout(res, 1000) }) // Load for a while
 
 		if (duration < 2.0)
 			return { label: "Recording was short enough.", status: 'pass' }
@@ -82,7 +90,7 @@ export default function Captcha() {
 	}
 	const ContainsWord: (audio: Blob, duration: number, speech: Promise<string>) => Promise<Message> = async (audio: Blob, duration: number, speech: Promise<string>) => {
 		const result = await speech
-		
+
 		if (result.includes("they're"))
 			return { label: "Identification successful with \"they're\"", status: 'pass' }
 		else
@@ -218,18 +226,18 @@ export default function Captcha() {
 
 		const speechPromise = speechRecognition.stop()
 		const checks = [
-			IsShortEnough, 
-			IsLoudEnough, 
+			IsShortEnough,
+			IsLoudEnough,
 			async (audio: Blob, duration: number) => await ContainsWord(audio, duration, speechPromise),
 			ContainsEnoughPitch,
 			ContainsClap
 		]
-		var pastChecks: Message[] = []
-		var currentCheck: Message = { label:'', status: 'loading' }
+		let pastChecks: Message[] = []
+		let currentCheck: Message = { label: '', status: 'loading' }
 
 		// Check functions until one fails
 		setChecks([])
-		await new Promise( (res) => { setTimeout(res, 1) }) // Wait for just a moment to allow all message boxes to disappear
+		await new Promise((res) => { setTimeout(res, 1) }) // Wait for just a moment to allow all message boxes to disappear
 
 		for (let i = 0; i < checks.length; i++) {
 			const checkFunction = checks[i]
@@ -242,39 +250,40 @@ export default function Captcha() {
 			if (currentCheck.status == 'fail' && i >= passedCheckCount)
 				break
 
-			setPassedCheckCount(i+1)
+			setPassedCheckCount(i + 1)
 		}
 
-
-		// TODO: Add logic for all checks complete
+		if (currentCheck.status == 'pass') {
+			onSuccess();
+		}
 	}
 
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 			<p>Please speak to confirm you are a human</p>
-							 <div
-								 className={`captcha-outer-grow${checks.length > 1 ? ' expanded' : ''}`}
-								 style={{ width: '100%', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '18px 12px'}}>
-											 <CaptchaRecorder onStartRecording={OnStartRecording} onRecordingComplete={OnRecordingComplete}/>
-																			 <div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
-							{checks.map((check, idx) => {
-								// Animate only if this check hasn't animated in yet
-								return (
-									<div key={idx} className={`captcha-messagebox-outer captcha-pop-in`}>
-									{check.status == 'pass' ? 
-										RenderMessagebox(check.label, () => {}, 'success', 
-											<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />)
+			<div
+				className={`captcha-outer-grow${checks.length > 1 ? ' expanded' : ''}`}
+				style={{ width: '100%', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '18px 12px' }}>
+				<CaptchaRecorder onStartRecording={OnStartRecording} onRecordingComplete={OnRecordingComplete} />
+				<div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
+					{checks.map((check, idx) => {
+						// Animate only if this check hasn't animated in yet
+						return (
+							<div key={idx} className={`captcha-messagebox-outer captcha-pop-in`}>
+								{check.status == 'pass' ?
+									RenderMessagebox(check.label, () => { }, 'success',
+										<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />)
 									: check.status == 'fail' ?
-										RenderMessagebox(check.label, () => {}, 'error', 
+										RenderMessagebox(check.label, () => { }, 'error',
 											<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
-									: RenderMessagebox(check.label, () => {}, 'warning', 
+										: RenderMessagebox(check.label, () => { }, 'warning',
 											<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
-									}
-								</div>
-							);
-						})}
-					</div>
+								}
+							</div>
+						);
+					})}
 				</div>
 			</div>
-		);
-	}
+		</div>
+	);
+}
