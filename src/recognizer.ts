@@ -5,6 +5,7 @@ const SpeechGrammarList =
 
 export class Recognizer {
   recognition: SpeechRecognition
+  resultPromise: Promise<string>
 
   constructor() {
     const recognition = new SpeechRecognition()
@@ -16,21 +17,38 @@ export class Recognizer {
     recognition.interimResults = false
     recognition.maxAlternatives = 1
     this.recognition = recognition
+
+    this.resultPromise = new Promise(() => "Error: Call start")
   }
 
   start() {
     this.recognition.start()
+
+    this.resultPromise = new Promise<string>(
+    (resolve, reject) => {
+      console.log("Created callback")
+      this.recognition.onresult = (event) => {
+        console.log("Should resolve")
+        resolve(event.results[0][0].transcript)
+      }
+      this.recognition.onerror = (ev) => {
+        console.log("Errori")
+        reject()
+      }
+      this.recognition.onend = (event) => {
+        resolve(event.type)
+      }
+      this.recognition.onnomatch = (ev) => {
+        console.log("calling nomathc")
+        resolve("")
+      }
+    }) 
   }
 
   stop(): Promise<string> {
     
-    const promise = new Promise<string>((resolve) => {
-      this.recognition.onresult = (event) => {
-        resolve(event.results[0][0].transcript)
-      }
-    })
     this.recognition.stop()
-
-    return promise
+    console.log(this.resultPromise)
+    return this.resultPromise
   }
 }
