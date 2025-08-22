@@ -241,6 +241,7 @@ export default function Captcha({ onSuccess }: Props) {
 		// Check functions until one fails
 		setChecks([])
 		await new Promise((res) => { setTimeout(res, 1) }) // Wait for just a moment to allow all message boxes to disappear
+		let anyFailed = false
 
 		for (let i = 0; i < checks.length; i++) {
 			const checkFunction = checks[i]
@@ -250,13 +251,18 @@ export default function Captcha({ onSuccess }: Props) {
 			pastChecks = [...pastChecks, currentCheck]
 			setChecks(pastChecks)
 
-			if (currentCheck.status == 'fail' && i >= passedCheckCount)
+			if(currentCheck.status === 'fail') {
+				anyFailed = true;
+			}
+
+			if (anyFailed && i >= passedCheckCount) {
 				break
+			}
 
 			setPassedCheckCount(i + 1)
 		}
 
-		if (currentCheck.status == 'pass') {
+		if (!anyFailed) {
 			onSuccess();
 		}
 	}
