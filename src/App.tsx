@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import './App.css';
+import './App.css'
+import { Captcha } from './Captcha'
 
 function App() {
   const [email, setEmail] = useState('');
@@ -81,6 +83,7 @@ function App() {
           <a href="#" onClick={e => { e.preventDefault(); alert('Sign up page would open here'); }}>Sign up</a>
         </div>
       </div>
+      <Captcha></Captcha>
     </>
   );
 }      
