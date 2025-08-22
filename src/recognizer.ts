@@ -25,23 +25,23 @@ export class Recognizer {
     this.recognition.start()
 
     this.resultPromise = new Promise<string>(
-    (resolve, reject) => {
+    (resolve) => {
       console.log("Created callback")
       this.recognition.onresult = (event) => {
         console.log("Should resolve")
         resolve(event.results[0][0].transcript)
       }
-      this.recognition.onerror = (ev) => {
-        console.log("Errori")
-        reject()
-      }
+      // this.recognition.onerror = (ev) => {
+      //   console.log("Errori")
+      //   reject()
+      // }
       this.recognition.onend = (event) => {
-        resolve(event.type)
-      }
-      this.recognition.onnomatch = (ev) => {
-        console.log("calling nomathc")
         resolve("")
       }
+      // this.recognition.onnomatch = (ev) => {
+      //   console.log("calling nomathc")
+      //   resolve("")
+      // }
     }) 
   }
 

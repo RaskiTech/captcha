@@ -1,6 +1,6 @@
 import './Captcha.css';
 import './App.css';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { CaptchaRecorder } from './CaptchaRecorder';
 import { Recognizer } from './recognizer';
 
@@ -31,6 +31,16 @@ export default function Captcha() {
 	const [checks, setChecks] = useState<Message[]>([]);
 	const [passedCheckCount, setPassedCheckCount] = useState<number>(-1)
 
+	// Track which checks have animated in
+	const animatedChecks = useRef<Set<string>>(new Set());
+	useEffect(() => {
+		checks.forEach((check) => {
+			if (!animatedChecks.current.has(check.label)) {
+				animatedChecks.current.add(check.label);
+			}
+		});
+	}, [checks]);
+
 	const speechRecognition = useMemo(() => new Recognizer(), [])
 
 	const IsLoudEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
@@ -48,7 +58,6 @@ export default function Captcha() {
 				max = Math.max(max, Math.abs(data[i]));
 				}
 			}
-
 
 			return max
 		};
@@ -85,7 +94,6 @@ export default function Captcha() {
 		speechRecognition.start()
 	}
 	const OnRecordingComplete = async (audio: Blob, duration: number) => {
-
 		const speechPromise = speechRecognition.stop()
 		const checks = [
 			IsLoudEnough, 
@@ -98,6 +106,8 @@ export default function Captcha() {
 
 		// Check functions until one fails
 		setChecks([])
+		await new Promise( (res) => { setTimeout(res, 1) }) // Wait for just a moment to allow all message boxes to disappear
+
 		for (let i = 0; i < checks.length; i++) {
 			const checkFunction = checks[i]
 			currentCheck = { label: 'Loading...', status: 'loading' }
@@ -121,21 +131,25 @@ export default function Captcha() {
 			<p>Please speak to confirm you are a human</p>
 			<div style={{ width: '100%', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '18px 12px'}}>
 				<CaptchaRecorder onStartRecording={OnStartRecording} onRecordingComplete={OnRecordingComplete}/>
-				<div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
-					{checks.map((check, idx) => (
-						<div key={idx}>
-							{check.status == 'pass' ? 
-								RenderMessagebox(check.label, () => {}, 'success', 
-									<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />)
-							: check.status == 'fail' ?
-								RenderMessagebox(check.label, () => {}, 'error', 
-									<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
-							: RenderMessagebox(check.label, () => {}, 'warning', 
-									<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
-							}
-						</div>
-					))}
-					</div>
+								<div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
+									   {checks.map((check, idx) => {
+										   // Animate only if this check hasn't animated in yet
+										   const popIn = !animatedChecks.current.has(check.label) && idx === checks.length - 1;
+										   return (
+											   <div key={idx} className={`captcha-messagebox-outer captcha-pop-in`}>
+												{check.status == 'pass' ? 
+													RenderMessagebox(check.label, () => {}, 'success', 
+														<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />)
+												: check.status == 'fail' ?
+													RenderMessagebox(check.label, () => {}, 'error', 
+														<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
+												: RenderMessagebox(check.label, () => {}, 'warning', 
+														<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />)
+												}
+											</div>
+										);
+									})}
+								</div>
 				</div>
 			</div>
 		);
