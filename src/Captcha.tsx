@@ -245,11 +245,11 @@ export default function Captcha({ onSuccess }: Props) {
 
 		const speechPromise = speechRecognition.stop()
 		const checks = [
-			ContainsClap,
 			IsShortEnough,
 			IsLoudEnough,
 			async (audio: Blob, duration: number) => await ContainsWord(audio, duration, speechPromise),
 			ContainsEnoughPitch,
+			ContainsClap,
 		]
 		let pastChecks: Message[] = []
 		let currentCheck: Message = { label: '', status: 'loading' }
