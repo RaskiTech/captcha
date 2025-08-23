@@ -37,76 +37,78 @@ function App() {
     }
   };
 
-  return (<>
-    <div className="background-crack bg-crack-1"></div>
-    <div className="background-crack bg-crack-2"></div>
-    <div className="background-crack bg-crack-3"></div>
-    <div
-      className={`login-container${tilted ? ' tilted' : ''}`}
-      onAnimationEnd={handleAnimationEnd}
-    >
-      <div className="crack crack-1"></div>
-      <div className="crack crack-2"></div>
-      <div className="crack crack-3"></div>
-      <div className="logo">
-        <div className={`logo-icon ${tilted ? ' tilted' : ''}`}></div>
-        <h1>Welcome back</h1>
-        <p>Sign in to your account</p>
-      </div>
-      <form className="login-form" onSubmit={handleSubmit} autoComplete="on">
-        <div className="form-group">
-          <label htmlFor="email">Email address</label>
-          <input
-            placeholder="Enter your email"
-            required
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-          />
+  return (
+    <>
+      <div className="background-crack bg-crack-1"></div>
+      <div className="background-crack bg-crack-2"></div>
+      <div className="background-crack bg-crack-3"></div>
+      <div
+        className={`login-container${tilted ? ' tilted' : ''}`}
+        onAnimationEnd={handleAnimationEnd}
+      >
+        <div className="crack crack-1"></div>
+        <div className="crack crack-2"></div>
+        <div className="crack crack-3"></div>
+        <div className="logo">
+          <div className={`logo-icon ${tilted ? ' tilted' : ''}`}></div>
+          <h1>Welcome back</h1>
+          <p>Sign in to your account</p>
         </div>
-        <div className="form-group" style={{ position: 'relative' }}>
-          <label htmlFor="password">Password</label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            id="password"
-            name="password"
-            placeholder="Enter your password"
-            required
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            autoComplete="current-password"
-          />
-        </div>
-        <button type="submit" className="login-btn" disabled={btnLoading}>{btnText}</button>
-      </form>
-
-      <div className="captcha-area">
-        {showCaptcha && (
-          <div className="captcha-reveal-anim">
-            <Captcha onSuccess={() => {
-              setCaptchaSuccess(true)
-            }} />
+        <form className="login-form" onSubmit={handleSubmit} autoComplete="on">
+          <div className="form-group">
+            <label htmlFor="email">Email address</label>
+            <input
+              placeholder="Enter your email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
           </div>
-        )}
-      </div>
+          <div className="form-group" style={{ position: 'relative' }}>
+            <label htmlFor="password">Password</label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </div>
+          <button type="submit" className="login-btn" disabled={btnLoading}>{btnText}</button>
+        </form>
 
-        <div className="divider">
-          <span>or continue with</span>
+        <div className="captcha-area">
+          {showCaptcha && (
+            <div className="captcha-reveal-anim">
+              <Captcha onSuccess={() => {
+                setCaptchaSuccess(true)
+              }} />
+            </div>
+          )}
         </div>
-        <div className="social-login">
-          {showSocial[0]
-            ? <button className="social-btn" type="button" onClick={() => setShowSocial([false, showSocial[1], showSocial[2]])}>🔵</button>
-            : <span className="social-btn" style={{visibility: 'hidden'}}></span>}
-          {showSocial[1]
-            ? <button className="social-btn" type="button" onClick={() => setShowSocial([showSocial[0], false, showSocial[2]])}>📘</button>
-            : <span className="social-btn" style={{visibility: 'hidden'}}></span>}
-          {showSocial[2]
-            ? <button className="social-btn" type="button" onClick={() => setShowSocial([showSocial[0], showSocial[1], false])}>🍎</button>
-            : <span className="social-btn" style={{visibility: 'hidden'}}></span>}
+
+          <div className="divider">
+            <span>or continue with</span>
+          </div>
+          <div className="social-login">
+            {showSocial[0]
+              ? <button className="social-btn" type="button" onClick={() => setShowSocial([false, showSocial[1], showSocial[2]])}>🔵</button>
+              : <span className="social-btn" style={{visibility: 'hidden'}}></span>}
+            {showSocial[1]
+              ? <button className="social-btn" type="button" onClick={() => setShowSocial([showSocial[0], false, showSocial[2]])}>📘</button>
+              : <span className="social-btn" style={{visibility: 'hidden'}}></span>}
+            {showSocial[2]
+              ? <button className="social-btn" type="button" onClick={() => setShowSocial([showSocial[0], showSocial[1], false])}>🍎</button>
+              : <span className="social-btn" style={{visibility: 'hidden'}}></span>}
+          </div>
         </div>
-      </div>
-      { captchaSuccess && (
-        <ReactConfetti />
-      )}
+        { captchaSuccess && (
+          <ReactConfetti />
+        )}
+    </>
   );
 }      
 

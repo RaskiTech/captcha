@@ -6,6 +6,7 @@ import { useWavesurfer } from '@wavesurfer/react';
 type Props = {
   onRecordingComplete: (audioBlob: Blob, duration: number) => void;
   onStartRecording: () => void;
+  disabled: boolean
 }
 
 const RECORD_DURATION = 5.0; // seconds
@@ -18,7 +19,7 @@ function newRecorder(): RecordPlugin {
   });
 }
 
-export function CaptchaRecorder({ onRecordingComplete, onStartRecording }: Props) {
+export function CaptchaRecorder({ onRecordingComplete, onStartRecording, disabled }: Props) {
   const containerRef = useRef(null)
 
   const recordRef = useRef(newRecorder());
@@ -40,7 +41,7 @@ export function CaptchaRecorder({ onRecordingComplete, onStartRecording }: Props
   const isRecording = recordRef.current.isRecording()
 
   return (
-    <div className="captcha-box">
+    <div className={`captcha-box ${disabled ? 'collapse' : ''}`}>
       <div className="captcha-content">
         {!isRecording ? <>
           <div className="captcha-circle">

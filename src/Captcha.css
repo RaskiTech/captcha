@@ -1,7 +1,13 @@
 /* Grow transition for outer container */
 .captcha-outer-grow {
-  transition: max-height 0.5s cubic-bezier(.4,0,.2,1), padding 0.5s cubic-bezier(.4,0,.2,1);
+  transition: max-height 1s cubic-bezier(.4,0,.2,1), background 1s ease-in-out;
+  max-height: 600px;
+  background: white;
   overflow: hidden;
+}
+.captcha-outer-grow.collapse {
+  max-height: 130px;
+  background: #aad8aa;
 }
 /* Pop-in animation for checks */
 .captcha-pop-in {

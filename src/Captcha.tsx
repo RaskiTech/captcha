@@ -33,6 +33,7 @@ type Props = {
 export default function Captcha({ onSuccess }: Props) {
 	const [checks, setChecks] = useState<Message[]>([]);
 	const [passedCheckCount, setPassedCheckCount] = useState<number>(-1)
+	const [collapsing, setCollapsing] = useState<boolean>(false)
 
 	// Track which checks have animated in
 	const animatedChecks = useRef<Set<string>>(new Set());
@@ -70,7 +71,6 @@ export default function Captcha({ onSuccess }: Props) {
 		const threshold = -22; // dB threshold for loudness 
 		const rmsLoudness = await Decode(audio);
 		const rmsDb = 20 * Math.log10(rmsLoudness); // Convert to dB
-		console.log({rmsDb})
 		const loudEnough = rmsDb > threshold;
 		await new Promise((res) => { setTimeout(res, 1000) })
 
@@ -117,7 +117,6 @@ export default function Captcha({ onSuccess }: Props) {
 				}
 				correlation = correlation / (size - offset);
 
-				// console.log(correlation)
 				if (correlation > bestCorrelation && correlation > 0.001) {
 					bestCorrelation = correlation;
 					bestOffset = offset;
@@ -146,7 +145,6 @@ export default function Captcha({ onSuccess }: Props) {
 				for (let i = 0; i < data.length - windowSize; i += hop) {
 					const window = data.slice(i, i + windowSize);
 					const pitch = detectPitch(window, audioBuffer.sampleRate);
-					console.log(pitch)
 					if (pitch && pitch > 50 && pitch < 2000) { // filter out noise
 						minPitch = Math.min(minPitch, pitch);
 						maxPitch = Math.max(maxPitch, pitch);
@@ -195,7 +193,6 @@ export default function Captcha({ onSuccess }: Props) {
 
 					// Compare with previous window (sudden spike = clap candidate)
 					if (i > 0) {
-						console.log(rms + " " + prevRms)
 						if (rms > 0.1 && rms > prevRms * 7) { 
 							// Thresholds: >0.25 amplitude and 3x increase over prev window
 							detected = true;
@@ -252,7 +249,7 @@ export default function Captcha({ onSuccess }: Props) {
 			setChecks(pastChecks)
 
 			if(currentCheck.status === 'fail') {
-				anyFailed = true;
+				anyFailed = true // true in prod
 			}
 
 			if (anyFailed && i >= passedCheckCount) {
@@ -263,6 +260,16 @@ export default function Captcha({ onSuccess }: Props) {
 		}
 
 		if (!anyFailed) {
+			// while (pastChecks.length > 0)
+			// {
+			// 	await new Promise((res) => { setTimeout(res, 500) }) // Wait for just a moment to allow all message boxes to disappear
+			// 	console.log("Removing")
+			// 	pastChecks.pop()
+			// 	setChecks([...pastChecks])
+			// }
+			await new Promise((res) => { setTimeout(res, 500) }) // Wait for just a moment to allow all message boxes to disappear
+			setCollapsing(true)
+
 			onSuccess();
 		}
 	}
@@ -271,9 +278,9 @@ export default function Captcha({ onSuccess }: Props) {
 		<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 			<p>Please speak to confirm you are a human</p>
 			<div
-				className={`captcha-outer-grow`}
-				style={{ width: '100%', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '18px 12px' }}>
-				<CaptchaRecorder onStartRecording={OnStartRecording} onRecordingComplete={OnRecordingComplete} />
+				className={`captcha-outer-grow ${collapsing ? 'collapse' : ''}`}
+				style={{ width: '100%', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '18px 12px' }}>
+				<CaptchaRecorder onStartRecording={OnStartRecording} onRecordingComplete={OnRecordingComplete} disabled={collapsing}/>
 				<div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
 					{checks.map((check, idx) => {
 						return (
