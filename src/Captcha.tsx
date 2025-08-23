@@ -208,8 +208,8 @@ export default function Captcha({ onSuccess }: Props) {
 
 					// Compare with previous window (sudden spike = clap candidate)
 					if (i > 0) {
-						if (rms > 0.1 && rms > prevRms * 7) { 
-							// Thresholds: >0.25 amplitude and 3x increase over prev window
+						if (rms > 0.05 && rms > prevRms * 30) { 
+							console.log("Found " + rms + " that was " + rms / prevRms)
 							detected = true;
 							break;
 						}
@@ -241,11 +241,11 @@ export default function Captcha({ onSuccess }: Props) {
 
 		const speechPromise = speechRecognition.stop()
 		const checks = [
+			ContainsClap,
 			IsShortEnough,
 			IsLoudEnough,
 			async (audio: Blob, duration: number) => await ContainsWord(audio, duration, speechPromise),
 			ContainsEnoughPitch,
-			ContainsClap
 		]
 		let pastChecks: Message[] = []
 		let currentCheck: Message = { label: '', status: 'loading' }
