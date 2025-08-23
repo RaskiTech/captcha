@@ -35,6 +35,7 @@ export default function Captcha({ onSuccess }: Props) {
 	const [passedCheckCount, setPassedCheckCount] = useState<number>(-1)
 	const [collapsing, setCollapsing] = useState<boolean>(false)
 	const numTries = useRef(0)
+	const numTriesVocal = useRef(0)
 
 	// Track which checks have animated in
 	const animatedChecks = useRef<Set<string>>(new Set());
@@ -48,7 +49,7 @@ export default function Captcha({ onSuccess }: Props) {
 
 	const speechRecognition = useMemo(() => new Recognizer(), [])
 
-	const IsLoudEnough = async (audio: Blob, _duration: number, numTries: number) => {
+	const IsLoudEnough = async (audio: Blob, _duration: number) => {
 		const Decode = async (audio: Blob): Promise<number> => {
 			// 1. Decode audio data
 			const arrayBuffer = await audio.arrayBuffer();
@@ -58,26 +59,36 @@ export default function Captcha({ onSuccess }: Props) {
 			let maxLoudness = 0;
 			for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
 				const data = audioBuffer.getChannelData(ch);
-				let sumSquares = 0;
-				for (let i = 0; i < data.length; i++) {
-					sumSquares += data[i] * data[i];
+
+				console.log(data.length)
+				const windowSize = Math.min(20000, data.length);
+				for (let start = 0; start + windowSize <= data.length; start += windowSize)
+				{
+					let sumSquares = 0;
+					for (let i = 0; i < data.length; i++) {
+						sumSquares += data[i] * data[i];
+					}
+					const rms = Math.sqrt(sumSquares / data.length);
+					maxLoudness = Math.max(maxLoudness, rms);
 				}
-				const rms = Math.sqrt(sumSquares / data.length);
-				maxLoudness = Math.max(maxLoudness, rms);
 			}
 			return maxLoudness
 		}
 
-
-		const threshold = -22 - numTries; // dB threshold for loudness 
+		const volumeArray = [0, -18, -19, -20, -21, -22, -25, -28]
+		const arrayIdx = Math.min(volumeArray.length, numTries.current)
+		const threshold = volumeArray[arrayIdx] 
 		const rmsLoudness = await Decode(audio);
 		const rmsDb = 20 * Math.log10(rmsLoudness); // Convert to dB
 		const loudEnough = rmsDb > threshold;
 		await new Promise((res) => { setTimeout(res, 1000) })
 
+		console.log("Was " + rmsDb + " / " + threshold)
 		if (loudEnough) {
 			return { label: "The recording was loud enough", status: 'pass' }
 		}
+		
+		numTries.current++
 		return { label: "Sorry, we couldn't quite hear you. Please speak louder", status: 'fail' }
 	}
 	const IsShortEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
@@ -161,10 +172,13 @@ export default function Captcha({ onSuccess }: Props) {
 		const { min, max } = await DecodePitch(audio)
 		await new Promise((res) => { setTimeout(res, 2000) }) // Load for a while
 
-		if (Math.abs(max - min) > 75)
+		if (Math.abs(max - min) > 75 && numTriesVocal.current > 0)
 			return { label: "Vocal range check successful", status: 'pass' }
 		else
+		{
+			numTriesVocal.current++;
 			return { label: "Please include different pitch levels so we can hear your full vocal range.", status: 'fail' }
+		}
 	}
 	const ContainsClap: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 		const DetectClap = async (audio: Blob): Promise<boolean> => {
@@ -228,7 +242,7 @@ export default function Captcha({ onSuccess }: Props) {
 		const speechPromise = speechRecognition.stop()
 		const checks = [
 			IsShortEnough,
-			async (audio: Blob, duration: number) => IsLoudEnough(audio, duration, numTries.current),
+			IsLoudEnough,
 			async (audio: Blob, duration: number) => await ContainsWord(audio, duration, speechPromise),
 			ContainsEnoughPitch,
 			ContainsClap
@@ -274,7 +288,6 @@ export default function Captcha({ onSuccess }: Props) {
 			onSuccess();
 		}
 
-		numTries.current++
 	}
 
 	return (
