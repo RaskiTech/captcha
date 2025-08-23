@@ -72,6 +72,11 @@ function App() {
             />
           </div>
           <button type="submit" className="login-btn" disabled={btnLoading}>{'Sign in'}</button>
+          {typeof window !== 'undefined' && !/Chrome/.test(navigator.userAgent) && (
+            <div style={{ color: 'red', marginTop: 12, textAlign: 'center' }}>
+              The CAPTCHA only works in Chrome.
+            </div>
+          )}
         </form>
 
         <div className="captcha-area">
