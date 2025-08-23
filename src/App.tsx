@@ -15,8 +15,7 @@ function App() {
   const [btnText, setBtnText] = useState('Sign In');
   const [showCaptcha, setShowCaptcha] = useState(false)
   const [captchaSuccess, setCaptchaSuccess] = useState(false);
-
-  
+  const [showSocial, setShowSocial] = useState([true, true, true]);
 
   const handlePasswordToggle = () => {
     setShowPassword((v) => !v);
@@ -95,15 +94,20 @@ function App() {
           <span>or continue with</span>
         </div>
         <div className="social-login">
-          <button className="social-btn" type="button">🔵</button>
-          <button className="social-btn" type="button">📘</button>
-          <button className="social-btn" type="button">🍎</button>
+          {showSocial[0]
+            ? <button className="social-btn" type="button" onClick={() => setShowSocial([false, showSocial[1], showSocial[2]])}>🔵</button>
+            : <span className="social-btn" style={{visibility: 'hidden'}}></span>}
+          {showSocial[1]
+            ? <button className="social-btn" type="button" onClick={() => setShowSocial([showSocial[0], false, showSocial[2]])}>📘</button>
+            : <span className="social-btn" style={{visibility: 'hidden'}}></span>}
+          {showSocial[2]
+            ? <button className="social-btn" type="button" onClick={() => setShowSocial([showSocial[0], showSocial[1], false])}>🍎</button>
+            : <span className="social-btn" style={{visibility: 'hidden'}}></span>}
         </div>
       </div>
       { captchaSuccess && (
         <ReactConfetti />
       )}
-    </>
   );
 }      
 
