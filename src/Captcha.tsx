@@ -16,7 +16,7 @@ function RenderMessagebox(message: string, clearMessage: () => void,
 				<div className="captcha-messagebox-content">
 					<div className="captcha-messagebox-left">
 						<svg className="captcha-messagebox-icon" fill="currentColor">{leftSideSvg}</svg>
-						<span className="captcha-messagebox-text">{message}</span>
+						<span className={`captcha-messagebox-text ${color === 'warning' ? '' : 'resolved'}`}>{message}</span>
 					</div>
 				</div>
 			</div>
@@ -67,7 +67,7 @@ export default function Captcha({ onSuccess }: Props) {
 		}
 		
 
-		const threshold = -20; // dB threshold for loudness 
+		const threshold = -22; // dB threshold for loudness 
 		const rmsLoudness = await Decode(audio);
 		const rmsDb = 20 * Math.log10(rmsLoudness); // Convert to dB
 		console.log({rmsDb})
@@ -77,7 +77,7 @@ export default function Captcha({ onSuccess }: Props) {
 		if (loudEnough) {
 			return { label: "The recording was loud enough", status: 'pass' }
 		}
-		return { label: "We couldn't quite hear you. Please speak louder", status: 'fail' }
+		return { label: "Sorry, we couldn't quite hear you. Please speak louder", status: 'fail' }
 	}
 	const IsShortEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 
@@ -91,10 +91,12 @@ export default function Captcha({ onSuccess }: Props) {
 	const ContainsWord: (audio: Blob, duration: number, speech: Promise<string>) => Promise<Message> = async (audio: Blob, duration: number, speech: Promise<string>) => {
 		const result = await speech
 
+		await new Promise((res) => { setTimeout(res, 500) }) // Load for a while
+
 		if (result.includes("they're"))
 			return { label: "Identification successful with \"they're\"", status: 'pass' }
 		else
-			return { label: "Please include the word \"they're\" so we can easily identify you. You said: " + result, status: 'fail' }
+			return { label: "Please include the word \"they're\" so we can easily identify you. You said:\n" + result, status: 'fail' }
 	}
 	const ContainsEnoughPitch: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
 		// Helper: naive autocorrelation pitch detection for a window of PCM data
@@ -158,7 +160,7 @@ export default function Captcha({ onSuccess }: Props) {
 		};
 
 		const { min, max } = await DecodePitch(audio)
-		console.log(min + " " + max + " D: " + Math.abs(max - min))
+		await new Promise((res) => { setTimeout(res, 2000) }) // Load for a while
 
 		if (Math.abs(max - min) > 75)
 			return { label: "Vocal range check successful", status: 'pass' }
@@ -210,6 +212,7 @@ export default function Captcha({ onSuccess }: Props) {
 		};
 
 		const result = await DetectClap(audio)
+		await new Promise((res) => { setTimeout(res, 1000) }) // Load for a while
 
 		if (result)
 			return { label: "Clap found.", status: "pass" }
@@ -262,12 +265,11 @@ export default function Captcha({ onSuccess }: Props) {
 		<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 			<p>Please speak to confirm you are a human</p>
 			<div
-				className={`captcha-outer-grow${checks.length > 1 ? ' expanded' : ''}`}
+				className={`captcha-outer-grow`}
 				style={{ width: '100%', background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '18px 12px' }}>
 				<CaptchaRecorder onStartRecording={OnStartRecording} onRecordingComplete={OnRecordingComplete} />
 				<div style={{ marginTop: checks.length > 0 ? 12 : 0, width: '100%' }}>
 					{checks.map((check, idx) => {
-						// Animate only if this check hasn't animated in yet
 						return (
 							<div key={idx} className={`captcha-messagebox-outer captcha-pop-in`}>
 								{check.status == 'pass' ?
