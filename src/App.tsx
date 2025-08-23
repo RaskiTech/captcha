@@ -10,16 +10,10 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const [showPassword, setShowPassword] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
-  const [btnText, setBtnText] = useState('Sign In');
   const [showCaptcha, setShowCaptcha] = useState(false)
   const [captchaSuccess, setCaptchaSuccess] = useState(false);
   const [showSocial, setShowSocial] = useState([true, true, true]);
-
-  const handlePasswordToggle = () => {
-    setShowPassword((v) => !v);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +61,7 @@ function App() {
           <div className="form-group" style={{ position: 'relative' }}>
             <label htmlFor="password">Password</label>
             <input
-              type={showPassword ? 'text' : 'password'}
+              type={false ? 'text' : 'password'}
               id="password"
               name="password"
               placeholder="Enter your password"
@@ -77,7 +71,7 @@ function App() {
               autoComplete="current-password"
             />
           </div>
-          <button type="submit" className="login-btn" disabled={btnLoading}>{btnText}</button>
+          <button type="submit" className="login-btn" disabled={btnLoading}>{'Sign in'}</button>
         </form>
 
         <div className="captcha-area">
