@@ -33,6 +33,7 @@ type Props = {
 export default function Captcha({ onSuccess }: Props) {
 	const [checks, setChecks] = useState<Message[]>([]);
 	const [passedCheckCount, setPassedCheckCount] = useState<number>(-1)
+	const numTries = useRef(0)
 
 	// Track which checks have animated in
 	const animatedChecks = useRef<Set<string>>(new Set());
@@ -46,7 +47,7 @@ export default function Captcha({ onSuccess }: Props) {
 
 	const speechRecognition = useMemo(() => new Recognizer(), [])
 
-	const IsLoudEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
+	const IsLoudEnough = async (audio: Blob, _duration: number, numTries: number) => {
 		const Decode = async (audio: Blob): Promise<number> => {
 			// 1. Decode audio data
 			const arrayBuffer = await audio.arrayBuffer();
@@ -65,12 +66,11 @@ export default function Captcha({ onSuccess }: Props) {
 			}
 			return maxLoudness
 		}
-		
 
-		const threshold = -22; // dB threshold for loudness 
+
+		const threshold = -22 - numTries; // dB threshold for loudness 
 		const rmsLoudness = await Decode(audio);
 		const rmsDb = 20 * Math.log10(rmsLoudness); // Convert to dB
-		console.log({rmsDb})
 		const loudEnough = rmsDb > threshold;
 		await new Promise((res) => { setTimeout(res, 1000) })
 
@@ -184,7 +184,7 @@ export default function Captcha({ onSuccess }: Props) {
 				const data = audioBuffer.getChannelData(ch);
 
 				// Step through in windows
-				var prevRms = 0
+				let prevRms = 0
 				for (let i = 0; i < data.length - windowSize; i += windowSize) {
 					// RMS (energy) of current window
 					let sum = 0;
@@ -196,7 +196,7 @@ export default function Captcha({ onSuccess }: Props) {
 					// Compare with previous window (sudden spike = clap candidate)
 					if (i > 0) {
 						console.log(rms + " " + prevRms)
-						if (rms > 0.1 && rms > prevRms * 7) { 
+						if (rms > 0.1 && rms > prevRms * 7) {
 							// Thresholds: >0.25 amplitude and 3x increase over prev window
 							detected = true;
 							break;
@@ -230,7 +230,7 @@ export default function Captcha({ onSuccess }: Props) {
 		const speechPromise = speechRecognition.stop()
 		const checks = [
 			IsShortEnough,
-			IsLoudEnough,
+			async (audio: Blob, duration: number) => IsLoudEnough(audio, duration, numTries.current),
 			async (audio: Blob, duration: number) => await ContainsWord(audio, duration, speechPromise),
 			ContainsEnoughPitch,
 			ContainsClap
@@ -251,7 +251,7 @@ export default function Captcha({ onSuccess }: Props) {
 			pastChecks = [...pastChecks, currentCheck]
 			setChecks(pastChecks)
 
-			if(currentCheck.status === 'fail') {
+			if (currentCheck.status === 'fail') {
 				anyFailed = true;
 			}
 
@@ -265,6 +265,8 @@ export default function Captcha({ onSuccess }: Props) {
 		if (!anyFailed) {
 			onSuccess();
 		}
+
+		numTries.current++
 	}
 
 	return (
