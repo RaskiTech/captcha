@@ -34,6 +34,7 @@ export default function Captcha({ onSuccess }: Props) {
 	const [checks, setChecks] = useState<Message[]>([]);
 	const [passedCheckCount, setPassedCheckCount] = useState<number>(-1)
 	const [collapsing, setCollapsing] = useState<boolean>(false)
+	const numTries = useRef(0)
 
 	// Track which checks have animated in
 	const animatedChecks = useRef<Set<string>>(new Set());
@@ -47,7 +48,7 @@ export default function Captcha({ onSuccess }: Props) {
 
 	const speechRecognition = useMemo(() => new Recognizer(), [])
 
-	const IsLoudEnough: (audio: Blob, duration: number) => Promise<Message> = async (audio: Blob, duration: number) => {
+	const IsLoudEnough = async (audio: Blob, _duration: number, numTries: number) => {
 		const Decode = async (audio: Blob): Promise<number> => {
 			// 1. Decode audio data
 			const arrayBuffer = await audio.arrayBuffer();
@@ -66,9 +67,9 @@ export default function Captcha({ onSuccess }: Props) {
 			}
 			return maxLoudness
 		}
-		
 
-		const threshold = -22; // dB threshold for loudness 
+
+		const threshold = -22 - numTries; // dB threshold for loudness 
 		const rmsLoudness = await Decode(audio);
 		const rmsDb = 20 * Math.log10(rmsLoudness); // Convert to dB
 		const loudEnough = rmsDb > threshold;
@@ -182,7 +183,7 @@ export default function Captcha({ onSuccess }: Props) {
 				const data = audioBuffer.getChannelData(ch);
 
 				// Step through in windows
-				var prevRms = 0
+				let prevRms = 0
 				for (let i = 0; i < data.length - windowSize; i += windowSize) {
 					// RMS (energy) of current window
 					let sum = 0;
@@ -227,7 +228,7 @@ export default function Captcha({ onSuccess }: Props) {
 		const speechPromise = speechRecognition.stop()
 		const checks = [
 			IsShortEnough,
-			IsLoudEnough,
+			async (audio: Blob, duration: number) => IsLoudEnough(audio, duration, numTries.current),
 			async (audio: Blob, duration: number) => await ContainsWord(audio, duration, speechPromise),
 			ContainsEnoughPitch,
 			ContainsClap
@@ -272,6 +273,8 @@ export default function Captcha({ onSuccess }: Props) {
 
 			onSuccess();
 		}
+
+		numTries.current++
 	}
 
 	return (
