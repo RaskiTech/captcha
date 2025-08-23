@@ -36,6 +36,7 @@ export default function Captcha({ onSuccess }: Props) {
 	const [collapsing, setCollapsing] = useState<boolean>(false)
 	const numTries = useRef(0)
 	const numTriesVocal = useRef(0)
+	const numTriesClap = useRef(0)
 
 	// Track which checks have animated in
 	const animatedChecks = useRef<Set<string>>(new Set());
@@ -226,10 +227,13 @@ export default function Captcha({ onSuccess }: Props) {
 		const result = await DetectClap(audio)
 		await new Promise((res) => { setTimeout(res, 1000) }) // Load for a while
 
-		if (result)
+		if (result && numTriesClap.current > 0)
 			return { label: "Clap found.", status: "pass" }
 		else
+		{
+			numTriesClap.current++
 			return { label: "As the last step, please clap in the recording for calibration purposes.", status: "fail" }
+		}
 	}
 
 	const OnStartRecording = async () => {
